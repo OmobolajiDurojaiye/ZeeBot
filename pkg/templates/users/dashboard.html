@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - ZeeBot</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static', filename='css/dashboard.css')}}"
+      type="text/css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="logo-container">
+        <a href="/">
+          <h1>ZeeBot</h1>
+        </a>
+      </div>
+      <nav class="nav-top">
+        <ul>
+          <li>
+            <a href="#"
+              ><img
+                src="{{ url_for('static', filename='icons/swap.png') }}"
+                alt="Swap"
+              />
+              Swap</a
+            >
+          </li>
+          {#
+          <li>
+            <a href="#"><img src="path/to/pool-icon.png" alt="Pool" /> Pool</a>
+          </li>
+          #}
+          <li>
+            <a href="#"
+              ><img
+                src="{{ url_for('static', filename='icons/mining.png') }}"
+                alt="Mining"
+              />
+              Mining</a
+            >
+          </li>
+          <li>
+            <a href="#"
+              ><img
+                src="{{ url_for('static', filename='icons/launchpad.png') }}"
+                alt="Launchpad"
+              />
+              Launchpad</a
+            >
+          </li>
+        </ul>
+      </nav>
+      <nav class="nav-bottom">
+        <ul>
+          <li>
+            <a href="#"
+              ><img
+                src="{{ url_for('static', filename='icons/profile.png') }}"
+                alt="Profile"
+              />
+              Profile</a
+            >
+          </li>
+          <li>
+            <a href="#"
+              ><img
+                src="{{ url_for('static', filename='icons/logout.png') }}"
+                alt="Logout"
+              />
+              Logout</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <div class="main-content">
+      <div class="top-section">
+        <button class="top-button">
+          <p>Connect Wallet</p>
+          <img
+            src="{{ url_for('static', filename='icons/connect-wallet.png') }}"
+            alt="Connect Wallet"
+          />
+        </button>
+        <div class="top-text">
+          <p>Create Token</p>
+          <h2>Connect your wallet with one click!</h2>
+          <h3>
+            <span class="numberConnected">0</span> wallets connected today
+          </h3>
+          <p style="color: red; font-size: 0.7em">
+            *Only 2000 wallets can be connected in a day
+          </p>
+        </div>
+        <button class="top-button">
+          <img
+            src="{{ url_for('static', filename='icons/withdraw.png') }}"
+            alt="Withdraw"
+          />
+          <p>Withdraw</p>
+          <!--how to connect the wallet - link to tutorial vid-->
+        </button>
+      </div>
+      <div class="bottom-section">
+        <form class="token-form">
+          <h2>Enter API Parameter</h2>
+          <label for="api-key">API KEY</label>
+          <!--api key-->
+          <input type="text" id="api-key" placeholder="1-16 characters" />
+          <label for="api-secret">API SECRET</label>
+          <!--api secret-->
+          <input type="text" id="api-secret" placeholder="0.99-44.532.5343" />
+          {#
+          <div class="checkbox-group">
+            <div>
+              <input type="checkbox" id="burn" />
+              <label for="burn">Burn</label>
+            </div>
+            <div>
+              <input type="checkbox" id="trading-fees" />
+              <label for="trading-fees">Trading Fees</label>
+            </div>
+            <div>
+              <input type="checkbox" id="supply-increase" />
+              <label for="supply-increase">Support Supply Increase</label>
+            </div>
+          </div>
+          #}
+
+          <div class="service-fee">
+            <p>Service fee <span>$5</span></p>
+          </div>
+          <button type="button" class="connectButton">Connect to Wallet</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const connectButton = document.querySelector(".connectButton");
+      const numberConnected = document.querySelector(".numberConnected");
+
+      connectButton.addEventListener("click", function () {
+        counter = 0;
+        counter++;
+        numberConnected.textContent = counter;
+      });
+    </script>
+  </body>
+</html>

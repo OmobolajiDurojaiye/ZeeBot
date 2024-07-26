@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Start trading now - ZeeBot</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static', filename='css/auth.css')}}"
+      type="text/css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a href="/" class="home-button">Home</a>
+    <div class="container">
+      <h1>Let's Start Trading</h1>
+      <div class="toggle-buttons">
+        <button id="signup-btn" class="active">Sign Up</button>
+        <button id="login-btn">Log In</button>
+      </div>
+      <div class="form-container">
+        <form id="signup-form" class="active">
+          <input type="text" placeholder="Enter name" required />
+          <input type="email" placeholder="Enter email" required />
+          <input type="password" placeholder="Enter password" required />
+          <input type="password" placeholder="Re-enter password" required />
+          <a
+            href="#"
+            class="terms-link"
+            id="terms-link"
+            style="font-size: 0.8em"
+            >Terms and Conditions</a
+          >
+          <button type="submit">Sign Up</button>
+        </form>
+        <form id="login-form">
+          <input type="text" placeholder="Username" required />
+          <input type="password" placeholder="Password" required />
+          <button type="submit">Log In</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal for Terms and Conditions -->
+    <div id="terms-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Terms and Conditions</h2>
+        <p>Terms and conditions to be here bro</p>
+      </div>
+    </div>
+
+    <script src="{{url_for('static', filename='js/auth.js')}}"></script>
+  </body>
+</html>

@@ -1,0 +1,263 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: "Poppins", sans-serif !important;
+}
+
+body {
+  padding: 20px;
+  display: flex;
+  background-color: #16171e;
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #1c1d23;
+  color: #fff;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 20px 0 0 20px;
+  margin: 0 10px 0 0;
+  border: 1px solid #25262e;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logo-container {
+  background-color: #2c2d34;
+  padding: 20px;
+  width: 100%;
+  text-align: center;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  height: max-content !important;
+}
+
+.logo-container h1 {
+  color: #ffe705;
+  font-size: 24px;
+}
+
+.sidebar nav {
+  width: 100%;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar nav ul.nav-top {
+  margin-top: 0 !important;
+}
+
+.sidebar nav ul.nav-bottom {
+  margin-top: auto;
+}
+
+.sidebar nav ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar nav ul li a {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font-size: 16px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.sidebar nav ul li a img {
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar nav ul li a:hover {
+  border-left: 3px solid #fff;
+  background-color: #25262e;
+  padding-left: 17px; /* Adjust for border */
+}
+
+.main-content {
+  flex-grow: 1;
+  background-color: #1a1b22;
+  padding: 40px;
+  box-sizing: border-box;
+  border-radius: 20px;
+}
+
+.top-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border: 1px solid #1d1f28;
+  background-color: #1f212a;
+  padding: 7vh 5vh;
+  border-radius: 20px;
+  overflow: visible; /* Allow content to overflow */
+}
+
+.top-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.top-button p {
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 0.8em;
+  color: #ffe804;
+}
+
+.top-button img {
+  width: 100px; /* Adjust size as needed */
+  height: 100px; /* Adjust size as needed */
+  position: relative;
+  top: -10px; /* Adjust for overflow */
+}
+
+.top-text {
+  text-align: center;
+}
+
+.top-text p {
+  color: #ffe804;
+  font-size: 18px;
+}
+
+.top-text h2 {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.top-text h3 {
+  font-size: 20px;
+  color: #fff;
+}
+
+.top-text h3 span {
+  color: #ffe804;
+}
+
+.bottom-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.token-form {
+  width: 400px;
+  padding: 20px;
+  border-radius: 15px;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+}
+
+.token-form h2 {
+  color: #ffe804;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.token-form label {
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.token-form input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #3a3b45;
+  border-radius: 10px;
+  background-color: #1f212a;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.checkbox-group div {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.checkbox-group input[type="checkbox"]:checked {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
+
+.checkbox-group input[type="checkbox"]:checked::before {
+  content: "✔";
+  display: block;
+  color: #fff;
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.checkbox-group label {
+  color: #fff;
+  font-size: 0.8em;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"]:focus {
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.5);
+}
+
+.service-fee {
+  text-align: center;
+  margin: 20px 0;
+  color: #fff;
+}
+
+.service-fee span {
+  color: #ffe804;
+}
+
+.token-form button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background-color: #ffe804;
+  color: #1a1b22;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.token-form button:hover {
+  background-color: #e6d904;
+}
