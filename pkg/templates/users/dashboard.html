@@ -19,7 +19,7 @@
   <body>
     <div class="sidebar">
       <div class="logo-container">
-        <a href="/">
+        <a href="/dashboard">
           <h1>ZeeBot</h1>
         </a>
       </div>
@@ -27,59 +27,64 @@
       <h1>Welcome, {{ user.alias }}!</h1>
       <nav class="nav-top">
         <ul>
-          <li>
-            <a href="#"
-              ><img
-                src="{{ url_for('static', filename='icons/swap.png') }}"
+          <li id="leverage">
+            <a href="#">
+              <img
+                src="{{ url_for('static', filename='icons/leverage.png') }}"
                 alt="Swap"
               />
-              Swap</a
-            >
+              Leverage
+            </a>
           </li>
-          {#
-          <li>
-            <a href="#"><img src="path/to/pool-icon.png" alt="Pool" /> Pool</a>
-          </li>
-          #}
-          <li>
-            <a href="#"
-              ><img
-                src="{{ url_for('static', filename='icons/mining.png') }}"
+          <li id="pay-commission">
+            <a href="#">
+              <img
+                src="{{ url_for('static', filename='icons/commission.png') }}"
                 alt="Mining"
               />
-              Mining</a
-            >
+              Pay Commission
+            </a>
           </li>
-          <li>
-            <a href="#"
-              ><img
-                src="{{ url_for('static', filename='icons/launchpad.png') }}"
+          <li id="refer-friend">
+            <a href="#">
+              <img
+                src="{{ url_for('static', filename='icons/refer.png') }}"
                 alt="Launchpad"
               />
-              Launchpad</a
-            >
+              Refer a friend
+            </a>
+          </li>
+
+          <li id="amountToTrade">
+            <a href="#">
+              <img
+                src="{{ url_for('static', filename='icons/trade.png') }}"
+                alt="Launchpad"
+              />
+              Amount to trade
+            </a>
           </li>
         </ul>
       </nav>
       <nav class="nav-bottom">
         <ul>
           <li>
-            <a href="#"
-              ><img
+            <a href="#">
+              <img
                 src="{{ url_for('static', filename='icons/profile.png') }}"
                 alt="Profile"
               />
-              {{ user.alias }}</a
-            >
+              {{ user.alias }}
+            </a>
           </li>
           <li>
-            <a href="/logout"
-              ><img
+            <a href="/logout">
+              <img
                 src="{{ url_for('static', filename='icons/logout.png') }}"
                 alt="Logout"
               />
-              Logout</a
-            >
+              Logout
+            </a>
           </li>
         </ul>
       </nav>
@@ -125,7 +130,7 @@
           </p>
         </div>
         <button class="top-button">
-          <a href="/index/#tutorialVideo">
+          <a href="/index/#tutorialVideo" target="_blank">
             <img
               src="{{ url_for('static', filename='icons/video.png') }}"
               alt="Tutorial Video"
@@ -144,23 +149,6 @@
           <label for="api-secret">API SECRET</label>
           <!--api secret-->
           <input type="text" id="api-secret" placeholder="0.99-44.532.5343" />
-          {#
-          <div class="checkbox-group">
-            <div>
-              <input type="checkbox" id="burn" />
-              <label for="burn">Burn</label>
-            </div>
-            <div>
-              <input type="checkbox" id="trading-fees" />
-              <label for="trading-fees">Trading Fees</label>
-            </div>
-            <div>
-              <input type="checkbox" id="supply-increase" />
-              <label for="supply-increase">Support Supply Increase</label>
-            </div>
-          </div>
-          #}
-
           <div class="service-fee">
             <p>Service fee <span>$5</span></p>
           </div>
@@ -177,6 +165,63 @@
         counter = 0;
         counter++;
         numberConnected.textContent = counter;
+      });
+
+      const leverageItem = document.getElementById("leverage");
+      const referFriendItem = document.getElementById("refer-friend");
+      const amountToTrade = document.getElementById("amountToTrade");
+      const bottomSection = document.querySelector(".bottom-section");
+
+      leverageItem.addEventListener("click", function () {
+        bottomSection.innerHTML = `
+      <form class="token-form">
+        <div class="form-group">
+          <label for="rangeInput">Drag to select your leverage range (1-10):</label>
+          <input type="range" class="form-control-range" id="rangeInput" min="1" max="10" value="1">
+        </div>
+        <div class="form-group">
+          <label for="numberDisplay">Selected Number:</label>
+          <input type="number" class="form-control" id="numberDisplay" value="1" readonly>
+        </div>
+        <button type="button" class="btn btn-primary connectButton">Enter</button>
+      </form>
+    `;
+
+        document
+          .getElementById("rangeInput")
+          .addEventListener("input", function () {
+            document.getElementById("numberDisplay").value = this.value;
+          });
+      });
+
+      referFriendItem.addEventListener("click", function () {
+        bottomSection.innerHTML = `
+          <div class="share-icons">
+            <h2>Tell A Friend About Us</h2>
+            <a href="https://twitter.com/share" target="_blank">
+              <img src="{{ url_for('static', filename='icons/twitter.jpg') }}" alt="Twitter" />
+            </a>
+            <a href="https://facebook.com/sharer/sharer.php" target="_blank">
+              <img src="{{ url_for('static', filename='icons/facebook.png') }}" alt="Facebook" />
+            </a>
+            <a href="https://www.linkedin.com/shareArticle" target="_blank">
+              <img src="{{ url_for('static', filename='icons/linkedin.png') }}" alt="LinkedIn" />
+            </a>
+          </div>
+        `;
+      });
+
+      amountToTrade.addEventListener("click", function () {
+        bottomSection.innerHTML = `
+          <form class="token-form">
+            <h2>Amount To Trade</h2>
+          <div class="form-group">
+            <label for="amountToTrade">Enter the amount you want to trade</label>
+            <input type="number" class="form-control" id="amountToTrade" value ="10,000">
+          </div>
+          <button type="button" class="btn btn-primary">Trade</button>
+        </form>
+        `;
       });
     </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
