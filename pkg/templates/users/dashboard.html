@@ -17,10 +17,20 @@
     />
   </head>
   <body>
+    <div class="hamburger">
+      <img
+        src="{{ url_for('static', filename='icons/hamburger.png') }}"
+        alt="Menu"
+      />
+    </div>
+
     <div class="sidebar">
       <div class="logo-container">
         <a href="/dashboard">
-          <h1>ZeeBot</h1>
+          <img
+            src="{{ url_for('static', filename='images/zeecryptobotlogo.jpg') }}"
+            alt=""
+          />
         </a>
       </div>
 
@@ -52,6 +62,16 @@
                 alt="Launchpad"
               />
               Refer a friend
+            </a>
+          </li>
+
+          <li id="amountToTrade">
+            <a href="#">
+              <img
+                src="{{ url_for('static', filename='icons/symbol.png') }}"
+                alt="Symbol"
+              />
+              Symbol
             </a>
           </li>
 
@@ -141,31 +161,57 @@
         </button>
       </div>
       <div class="bottom-section">
-        <form class="token-form">
+        <form
+          class="token-form"
+          method="POST"
+          action="{{ url_for('connect_wallet') }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <h2>Enter API Parameter</h2>
           <label for="api-key">API KEY</label>
-          <!--api key-->
-          <input type="text" id="api-key" placeholder="1-16 characters" />
+          <input
+            type="text"
+            id="api-key"
+            name="api_key"
+            placeholder="1-16 characters"
+            required
+          />
           <label for="api-secret">API SECRET</label>
-          <!--api secret-->
-          <input type="text" id="api-secret" placeholder="0.99-44.532.5343" />
+          <input
+            type="text"
+            id="api-secret"
+            name="api_secret"
+            placeholder="0.99-44.532.5343"
+            required
+          />
           <div class="service-fee">
             <p>Service fee <span>$5</span></p>
           </div>
-          <button type="button" class="connectButton">Connect to Wallet</button>
+          <button type="submit" class="connectButton">Connect to Wallet</button>
         </form>
       </div>
     </div>
 
     <script>
+      const hamburger = document.querySelector(".hamburger");
+      const sidebar = document.querySelector(".sidebar");
+      hamburger.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+      });
+
       const connectButton = document.querySelector(".connectButton");
       const numberConnected = document.querySelector(".numberConnected");
 
-      connectButton.addEventListener("click", function () {
-        counter = 0;
-        counter++;
-        numberConnected.textContent = counter;
-      });
+      document
+        .querySelector(".connectButton")
+        .addEventListener("click", function () {
+          let numberConnected =
+            parseInt(sessionStorage.getItem("walletsConnected")) || 0;
+          numberConnected++;
+          sessionStorage.setItem("walletsConnected", numberConnected);
+          document.querySelector(".numberConnected").textContent =
+            numberConnected;
+        });
 
       const leverageItem = document.getElementById("leverage");
       const referFriendItem = document.getElementById("refer-friend");

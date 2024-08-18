@@ -16,7 +16,7 @@ body {
   width: 200px;
   background-color: #1c1d23;
   color: #fff;
-  height: 100vh;
+  height: max-content;
   padding: 20px;
   box-sizing: border-box;
   border-radius: 20px 0 0 20px;
@@ -25,21 +25,69 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: transform 0.3s ease;
+}
+
+.hamburger {
+  display: none;
+  cursor: pointer;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.hamburger img {
+  width: 30px;
+  height: 30px;
+}
+
+.sidebar.active {
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-250px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: max-content;
+    z-index: 999;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .top-section {
+    flex-direction: column;
+  }
+
+  .top-text {
+    margin: 20px 0;
+  }
 }
 
 .logo-container {
   background-color: #2c2d34;
-  padding: 20px;
+  padding: 10px;
   width: 100%;
   text-align: center;
   border-radius: 10px;
   margin-bottom: 20px;
-  height: max-content !important;
+  height: 20vh !important;
 }
 
-.logo-container h1 {
-  color: #ffe705;
-  font-size: 24px;
+.logo-container img {
+  height: inherit;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 20px;
 }
 
 .sidebar nav {
@@ -120,10 +168,10 @@ body {
 }
 
 .top-button img {
-  width: 100px; /* Adjust size as needed */
-  height: 100px; /* Adjust size as needed */
+  width: 100px;
+  height: 100px;
   position: relative;
-  top: -10px; /* Adjust for overflow */
+  top: -10px;
 }
 
 .top-text {
