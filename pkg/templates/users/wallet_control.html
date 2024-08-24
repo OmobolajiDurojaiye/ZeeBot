@@ -1,114 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wallet Control</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
-      type="text/css"
-    />
-    <style>
-      body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background-color: #16171e;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-      }
+{% extends "users/dashboard.html" %} {% block bottom %}
+<style>
+  .btn-content {
+    text-align: center;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
 
-      .main-content {
-        text-align: center;
-        /* background-color: #fff; */
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      }
+  .wallet-control-section h2 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #ffe705;
+  }
 
-      .wallet-control-section h2 {
-        font-size: 24px;
-        margin-bottom: 30px;
-        color: #ffe705;
-      }
+  .wallet-control-section button {
+    display: inline-block;
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    background-color: #ffe804;
+    color: #1a1b22;
+    margin: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
 
-      .wallet-control-section button {
-        display: inline-block;
-        padding: 15px 30px;
-        font-size: 18px;
-        border: none;
-        border-radius: 10px;
-        background-color: #ffe804;
-        color: #1a1b22;
-        margin: 10px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
+  .status-message {
+    font-size: 18px;
+    margin-bottom: 20px;
+    display: none;
+  }
 
-      .go-back-button {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 10px;
-        background-color: #ffe804;
-        color: #1a1b22;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
+  .success-message {
+    color: green;
+  }
 
-      .go-back-button:hover {
-        background-color: #5a6268;
-      }
-    </style>
-  </head>
-  <body>
-    <button class="go-back-button">Go Back</button>
-    <div class="main-content">
-      <div class="wallet-control-section">
-        <h2>Wallet Control</h2>
-        <button class="start-button">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-play-circle-fill"
-            viewBox="0 0 16 16"
-          >
-            <path
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z"
-            /></svg
-          >Start
-        </button>
-        <button class="stop-button">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            fill="currentColor"
-            class="bi bi-stop-circle-fill"
-            viewBox="0 0 16 16"
-          >
-            <path
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.5 5A1.5 1.5 0 0 0 5 6.5v3A1.5 1.5 0 0 0 6.5 11h3A1.5 1.5 0 0 0 11 9.5v-3A1.5 1.5 0 0 0 9.5 5z"
-            /></svg
-          >Stop
-        </button>
-      </div>
+  .error-message {
+    color: red;
+  }
+</style>
+
+<div class="btn-content">
+  <form class="token-form" id="walletForm" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="wallet-control-section">
+      <h2>Wallet Control</h2>
+      <p class="status-message"></p>
+      <!-- Status message element -->
+      <button class="start-button">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          class="bi bi-play-circle-fill"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z"
+          />
+        </svg>
+        Start
+      </button>
+      <button class="stop-button">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          class="bi bi-stop-circle-fill"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.5 5A1.5 1.5 0 0 0 5 6.5v3A1.5 1.5 0 0 0 6.5 11h3A1.5 1.5 0 0 0 11 9.5v-3A1.5 1.5 0 0 0 9.5 5z"
+          />
+        </svg>
+        Stop
+      </button>
     </div>
-    <script>
-      document
-        .querySelector(".go-back-button")
-        .addEventListener("click", function () {
-          history.back();
-        });
-    </script>
-  </body>
-</html>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script>
+  const csrfToken = "{{ csrf_token() }}"; // CSRF token injected into the template
+  const tradingData = {
+    symbol: "{{ user.selected_symbol }}", // Dynamic symbol from Flask
+    amount: "{{ user.trading_capital }}", // Dynamic amount from Flask
+    leverage: "{{ user.leverage }}  ", // Dynamic leverage from Flask
+  };
+
+  // Start Trading Button Click Event
+  document
+    .querySelector(".start-button")
+    .addEventListener("click", function () {
+      $.ajax({
+        url: "/start_trading", // Endpoint for starting trading
+        type: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken, // Include CSRF token in the request
+        },
+        contentType: "application/json",
+        data: JSON.stringify(tradingData),
+        success: function (response) {
+          // Display success message
+          $(".status-message")
+            .text(response.message)
+            .removeClass("error-message")
+            .addClass("success-message")
+            .show();
+          $(".start-button").prop("disabled", true); // Disable start button
+        },
+        error: function (xhr) {
+          // Display error message
+          $(".status-message")
+            .text(xhr.responseJSON.error || "An error occurred")
+            .removeClass("success-message")
+            .addClass("error-message")
+            .show();
+        },
+      });
+    });
+
+  // Stop Trading Button Click Event
+  document.querySelector(".stop-button").addEventListener("click", function () {
+    $.ajax({
+      url: "/stop-trading", // Endpoint for stopping trading
+      type: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken, // Include CSRF token in the request
+      },
+      success: function (response) {
+        // Display success message
+        $(".status-message")
+          .text(response.message)
+          .removeClass("error-message")
+          .addClass("success-message")
+          .show();
+        $(".start-button").prop("disabled", false); // Enable start button
+      },
+      error: function (xhr) {
+        // Display error message
+        $(".status-message")
+          .text(xhr.responseJSON.error || "An error occurred")
+          .removeClass("success-message")
+          .addClass("error-message")
+          .show();
+      },
+    });
+  });
+</script>
+{% endblock bottom %}

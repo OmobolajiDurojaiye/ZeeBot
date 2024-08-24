@@ -175,3 +175,53 @@ footer {
 .footer-right a:hover {
   transform: scale(1.2);
 }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  #section1 {
+    flex-direction: column;
+    padding-left: 0;
+  }
+
+  .card-wrapper {
+    margin-left: 0;
+    align-items: center;
+  }
+
+  .card-center {
+    margin-top: 20px;
+    margin-left: 20px;
+  }
+
+  .card {
+    width: 90%;
+    height: auto;
+    margin-bottom: 20px;
+  }
+
+  .sectTtle {
+    font-size: 2em;
+    padding: 5%;
+  }
+
+  .secLink {
+    padding: 4% 5%;
+    font-size: 1.2em;
+  }
+
+  .videoContainer {
+    padding-top: 56.25%;
+  }
+
+  footer {
+    font-size: 0.8em;
+  }
+
+  .footer-left p {
+    margin: 5px 0;
+  }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - {{ user.alias }}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #16171e;
+        color: #f0f0f0;
+        padding: 20px;
+      }
+
+      .profile-container {
+        background-color: #1f2029;
+        border-radius: 10px;
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #fff;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+
+      label {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      input {
+        padding: 10px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #2a2b34;
+        color: #f0f0f0;
+      }
+
+      input::placeholder {
+        color: #8e8e8e;
+      }
+
+      button {
+        padding: 12px;
+        background-color: #ffe804;
+        color: 1a1b22;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+
+      p {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #ccc;
+      }
+
+      strong {
+        color: #fff;
+      }
+
+      a {
+        display: block;
+        margin-top: 20px;
+        text-align: center;
+        color: #ffe804;
+        font-size: 14px;
+        transition: color 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-container">
+      <h1>Profile for {{ user.alias }}</h1>
+
+      <form action="{{ url_for('profile', alias=user.alias) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <label for="email">Email</label>
+        <input
+          type="email"
+          name="email"
+          value="{{ user.email }}"
+          placeholder="Enter your email"
+          required
+        />
+
+        <label for="trading_capital">Trading Capital</label>
+        <input
+          type="number"
+          name="trading_capital"
+          value="{{ user.trading_capital }}"
+          placeholder="Enter trading capital"
+        />
+
+        <label for="leverage">Leverage</label>
+        <input
+          type="number"
+          name="leverage"
+          value="{{ user.leverage }}"
+          placeholder="Enter leverage"
+        />
+
+        <label for="api_key">API Key</label>
+        <input type="text" name="api_key" placeholder="Enter new API Key" />
+
+        <label for="api_secret">API Secret</label>
+        <input
+          type="text"
+          name="api_secret"
+          placeholder="Enter new API Secret"
+        />
+
+        <button type="submit">Update Profile</button>
+      </form>
+
+      <p>
+        <strong>Referral Code:</strong> {{ user.referral_code }}<br />
+        <strong>Referred Users:</strong> {{ user.referral_count }}
+      </p>
+
+      <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    </div>
+  </body>
+</html>
