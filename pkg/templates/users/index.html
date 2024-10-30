@@ -16,7 +16,9 @@
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body
+    style="background-image: url('{{ background_image }}'); background-position: center; background-size: cover;"
+  >
     <div class="container">
       <div class="section" id="section1">
         <div class="card-wrapper">
@@ -57,22 +59,45 @@
               work. Sit, relax while ZeeBot compounds your interest.
             </p>
           </div>
+
+          <div class="card" id="explainervidcard">
+            <div class="explainerVideo" id="tutorialVideo">
+              <div class="videoContainer">
+                <video controls>
+                  <source
+                    src="{{ url_for('static', filename='videos/wave.mp4') }}"
+                    type="video/mp4"
+                  />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <a href="/" class="logo-right">
+        <img
+          src="{{ url_for('static', filename='images/zeecryptobotlogo.jpg') }}"
+          alt=""
+        />
+      </a>
+
       <div class="section" id="section2">
         <h1 class="sectTtle">
           The most trusted and reliable cryptocurrency
           <span style="color: #ffe705">trading bot</span>.
         </h1>
         <p class="secDesc">
-          ZeeBot has a variety of features that makes it the best place to start
-          trading.
+          ZeeCryptoBot has a variety of features that makes it the best place to
+          start trading.
         </p>
 
-        <a href="/start-trading/" class="secLink">Let's Trade Now</a>
+        <a href="/auth/" class="secLink">Let's Trade Now</a>
       </div>
     </div>
 
+    {#
     <div class="explainerVideo" id="tutorialVideo">
       <div class="videoContainer">
         <video controls>
@@ -84,11 +109,12 @@
         </video>
       </div>
     </div>
+    #}
 
     <footer>
       <div class="footer-container">
         <div class="footer-left">
-          <p>Copyright &copy; 2024 ZeeBot</p>
+          <p>Copyright &copy; 2024 ZeeCryptoBot</p>
           <p>All Rights Reserved</p>
         </div>
         <div class="footer-right">

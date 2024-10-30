@@ -13,6 +13,12 @@
     color: #ffe705;
   }
 
+  .wallet-control-report h2 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #cccccc;
+  }
+
   .wallet-control-section button {
     display: inline-block;
     padding: 15px 30px;
@@ -27,6 +33,11 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   }
 
+  .wallet-control-section button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
   .status-message {
     font-size: 18px;
     margin-bottom: 20px;
@@ -39,6 +50,75 @@
 
   .error-message {
     color: red;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    background-color: #ffe804;
+    color: #1a1b22;
+    padding: 10px;
+    text-align: left;
+  }
+
+  tbody td {
+    background-color: #cccccc;
+    color: #1a1b22;
+    padding: 10px;
+    text-align: left;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #eaeaea;
+  }
+
+  tbody tr:hover {
+    background-color: #ddd;
+  }
+
+  @media (max-width: 768px) {
+    .btn-content {
+      padding: 20px;
+    }
+
+    .wallet-control-section h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .wallet-control-section button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .wallet-control-section {
+      margin-bottom: 20px;
+    }
+
+    .wallet-control-section a {
+      width: 100%;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .status-message {
+      font-size: 16px;
+    }
+
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    thead th,
+    tbody td {
+      font-size: 14px;
+      padding: 8px;
+    }
   }
 </style>
 
@@ -64,7 +144,7 @@
         </svg>
         Start
       </button>
-      <button class="stop-button">
+      <button class="stop-button" disabled>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -81,41 +161,143 @@
       </button>
     </div>
   </form>
+  <!-- Back to Dashboard Button -->
+  <div class="wallet-control-section">
+    <a
+      href="{{ url_for('dashboard') }}"
+      class="btn btn-secondary"
+      style="
+        margin-top: 20px;
+        display: inline-block;
+        /* padding: 10px 20px; */
+        background-color: #cccccc;
+        color: #1a1b22;
+        text-decoration: none;
+        border-radius: 5px;
+      "
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-arrow-left-circle-fill"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.646 7.646a.5.5 0 0 0 0 .708l2.853 2.854a.5.5 0 0 0 .708-.708L6.207 8.5H11.5a.5.5 0 0 0 0-1H6.207l1.293-1.293a.5.5 0 1 0-.708-.708L4.646 7.646z"
+        />
+      </svg>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<div class="wallet-control-section">
+  <h2>Trade Reports</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol Traded</th>
+        <th>Leverage Used</th>
+        <th>Amount In</th>
+        <th>Amount Out</th>
+        <th>Profit/Loss</th>
+        <th>Reason for Closure</th>
+      </tr>
+    </thead>
+    <tbody id="tradeReportTable" class="wallet-control-report">
+      <!-- Rows will be populated dynamically -->
+    </tbody>
+  </table>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
 <script>
-  const csrfToken = "{{ csrf_token() }}"; // CSRF token injected into the template
-  const tradingData = {
-    symbol: "{{ user.selected_symbol }}", // Dynamic symbol from Flask
-    amount: "{{ user.trading_capital }}", // Dynamic amount from Flask
-    leverage: "{{ user.leverage }}  ", // Dynamic leverage from Flask
-  };
+  function populateTradeReports() {
+    fetch("/get_trade_reports")
+      .then((response) => response.json())
+      .then((data) => {
+        const tableBody = document.getElementById("tradeReportTable");
+        tableBody.innerHTML = ""; // Clear existing rows
 
-  // Start Trading Button Click Event
+        data.forEach((report) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${report.symbol_traded}</td>
+            <td>${report.leverage_used}</td>
+            <td>${report.amount_in}</td>
+            <td>${report.amount_out}</td>
+            <td>${report.profit_or_loss}</td>
+            <td>${report.reason_for_closure}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      });
+  }
+
+  // Call this function when the page loads to display trade reports
+  document.addEventListener("DOMContentLoaded", populateTradeReports);
+
+  $(document).ready(function () {
+    // Get the initial trading status from the backend
+    const isTrading = '{{ session.get("isTrading", False) }}' === "True"; // Corrected flag conversion
+
+    // Set initial button states based on trading status
+    $(".start-button").prop("disabled", isTrading);
+    $(".stop-button").prop("disabled", !isTrading);
+  });
+
+  const csrfToken = "{{ csrf_token() }}"; // CSRF token injected into the template
+
   document
     .querySelector(".start-button")
-    .addEventListener("click", function () {
+    .addEventListener("click", function (e) {
+      e.preventDefault(); // Prevent form from submitting
+
+      // Check if there's an active trade
       $.ajax({
-        url: "/start_trading", // Endpoint for starting trading
-        type: "POST",
+        url: "/check_active_trade", // Endpoint to check for active trade
+        type: "GET",
         headers: {
           "X-CSRFToken": csrfToken, // Include CSRF token in the request
         },
-        contentType: "application/json",
-        data: JSON.stringify(tradingData),
         success: function (response) {
-          // Display success message
-          $(".status-message")
-            .text(response.message)
-            .removeClass("error-message")
-            .addClass("success-message")
-            .show();
-          $(".start-button").prop("disabled", true); // Disable start button
+          if (response.is_active) {
+            console.log("An active trade is found. Stopping it first.");
+
+            // Stop the current trade
+            $.ajax({
+              url: "/stop-trading", // Endpoint for stopping trading
+              type: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken, // Include CSRF token in the request
+              },
+              contentType: "application/json",
+              data: JSON.stringify({ user_id: "{{ user.id }}" }),
+              success: function (stopResponse) {
+                console.log(
+                  "Stopped existing trade successfully. Now starting a new one."
+                );
+                startNewTrade(); // Call function to start new trade after stopping existing one
+              },
+              error: function (xhr) {
+                console.log("Error stopping existing trade:", xhr.responseText);
+                $(".status-message")
+                  .text(xhr.responseJSON.error || "An error occurred")
+                  .removeClass("success-message")
+                  .addClass("error-message")
+                  .show();
+              },
+            });
+          } else {
+            console.log("No active trade found. Starting a new trade.");
+            startNewTrade(); // Start trade immediately if no active trade
+          }
         },
         error: function (xhr) {
-          // Display error message
+          console.log("Error checking active trade:", xhr.responseText);
           $(".status-message")
             .text(xhr.responseJSON.error || "An error occurred")
             .removeClass("success-message")
@@ -125,32 +307,148 @@
       });
     });
 
-  // Stop Trading Button Click Event
-  document.querySelector(".stop-button").addEventListener("click", function () {
+  function startNewTrade() {
     $.ajax({
-      url: "/stop-trading", // Endpoint for stopping trading
+      url: "/start_trading", // Endpoint for starting trading
       type: "POST",
       headers: {
         "X-CSRFToken": csrfToken, // Include CSRF token in the request
       },
+      contentType: "application/json",
+      data: JSON.stringify({
+        symbol: "{{ user.selected_symbol }}",
+        amount: "{{ user.trading_capital }}",
+        leverage: "{{ user.leverage }}",
+      }),
       success: function (response) {
-        // Display success message
+        console.log("Start Trading Success:", response);
         $(".status-message")
           .text(response.message)
           .removeClass("error-message")
           .addClass("success-message")
           .show();
-        $(".start-button").prop("disabled", false); // Enable start button
+        $(".start-button").prop("disabled", true); // Disable start button
+        $(".stop-button").prop("disabled", false); // Enable stop button
       },
       error: function (xhr) {
-        // Display error message
+        console.log("Start Trading Error:", xhr.responseText);
         $(".status-message")
-          .text(xhr.responseJSON.error || "An error occurred")
+          .text(xhr.responseJSON.message || "An error occurred")
           .removeClass("success-message")
           .addClass("error-message")
           .show();
       },
     });
-  });
+  }
+
+  document
+    .querySelector(".stop-button")
+    .addEventListener("click", function (e) {
+      e.preventDefault(); // Prevent form from submitting
+
+      // Immediately disable the stop button to give feedback to the user
+      $(".stop-button").prop("disabled", true);
+      $(".start-button").prop("disabled", true); // Disable start button to prevent actions while stopping
+
+      $.ajax({
+        url: "/stop-trading", // Endpoint for stopping trading
+        type: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken, // Include CSRF token in the request
+        },
+        contentType: "application/json", // Set correct content type
+        data: JSON.stringify({ user_id: "{{ user.id }}" }), // Pass user_id in the body as JSON
+        success: function (response) {
+          console.log("Stop Trading Success:", response);
+          $(".status-message")
+            .text(response.message)
+            .removeClass("error-message")
+            .addClass("success-message")
+            .show();
+
+          // Refresh the page after stopping
+          setTimeout(function () {
+            location.reload(); // Refresh the page
+          }, 1000); // Wait 1 second before refreshing
+        },
+        error: function (xhr) {
+          console.log("Stop Trading Error:", xhr.responseText);
+          $(".status-message")
+            .text(xhr.responseJSON.error || "An error occurred")
+            .removeClass("success-message")
+            .addClass("error-message")
+            .show();
+
+          // Re-enable buttons on error so user can retry
+          $(".stop-button").prop("disabled", false);
+          $(".start-button").prop("disabled", false);
+        },
+      });
+    });
+  // Function to fetch live position from the server
+  function fetchLivePosition() {
+    fetch("/get_position", {
+      // Make sure the endpoint is correct
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          updateDashboard(data.position); // Update dashboard with new position data
+        } else {
+          displayFlashedMessage(data.message, "danger"); // Display error message
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching live position:", error);
+        displayFlashedMessage("Error fetching live position.", "danger");
+      });
+  }
+
+  // Function to update the dashboard with new position data
+  function updateDashboard(position) {
+    const positionsContainer = document.getElementById("positionsContainer");
+    positionsContainer.innerHTML = ""; // Clear existing positions
+
+    const positionElement = document.createElement("div");
+    positionElement.className = "position-data";
+    positionElement.innerHTML = `
+    <p>Symbol: ${position.symbol}</p>
+    <p>Size: ${position.size} ${position.side}</p>
+    <p>Entry Price: ${position.entryPrice}</p>
+    <p>Mark Price: ${position.markPrice}</p>
+    <p>Unrealized P&L: ${position.unrealizedPnl}</p>
+  `;
+    positionsContainer.appendChild(positionElement);
+  }
+
+  // Function to display flash messages
+  function displayFlashedMessage(message, category) {
+    const flashContainer = document.getElementById("flash-messages");
+    flashContainer.innerHTML = ""; // Clear any existing messages
+
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+    alertDiv.role = "alert";
+    alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+    flashContainer.appendChild(alertDiv);
+  }
+
+  // Fetch position periodically every 5 seconds
+  setInterval(fetchLivePosition, 5000);
 </script>
 {% endblock bottom %}

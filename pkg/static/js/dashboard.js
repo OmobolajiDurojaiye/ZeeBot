@@ -151,39 +151,6 @@ leverageItem.addEventListener("click", function () {
     });
 });
 
-// referFriendItem.addEventListener("click", function () {
-//   bottomSection.innerHTML = `
-//           <div class="share-icons">
-//             <div id="flash-messages"></div>
-//             <h2>Refer a Friend</h2>
-//             <p>Your referral code: <strong>{{ user.referral_code }}</strong></p>
-//             <p>Friends who signed up using your code: <strong>{{ user.referral_count }}</strong></p>
-//             <div class="share-icons">
-//               <h3>Share your code:</h3>
-//               <input type="text" id="referralLink" value="{{ url_for('auth', _external=True) }}?ref={{ user.referral_code }}" readonly>
-//               <button onclick="copyReferralLink()">Copy Link</button>
-//               <a href="https://twitter.com/share?text=Join ZeeCryptoBot and use my referral code {{ user.referral_code }}" target="_blank">
-//                 <img src="{{ url_for('static', filename='icons/twitter.jpg') }}" alt="Twitter" />
-//               </a>
-//               <a href="https://facebook.com/sharer/sharer.php?u={{ url_for('auth', _external=True) }}?ref={{ user.referral_code }}" target="_blank">
-//                 <img src="{{ url_for('static', filename='icons/facebook.png') }}" alt="Facebook" />
-//               </a>
-//               <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ url_for('auth', _external=True) }}?ref={{ user.referral_code }}" target="_blank">
-//                 <img src="{{ url_for('static', filename='icons/linkedin.png') }}" alt="LinkedIn" />
-//               </a>
-//             </div>
-//           </div>
-//         `;
-// });
-
-// function copyReferralLink() {
-//   var copyText = document.getElementById("referralLink");
-//   copyText.select();
-//   copyText.setSelectionRange(0, 99999);
-//   document.execCommand("copy");
-//   alert("Copied the referral link: " + copyText.value);
-// }
-
 // Handle Amount to Trade with AJAX
 tradeAmountItem.addEventListener("click", function () {
   bottomSection.innerHTML = `

@@ -46,7 +46,7 @@
         </a>
       </div>
 
-      <h1>Welcome, {{ user.alias }}!</h1>
+      <h1>Hi, {{ user.alias }}!</h1>
       <nav class="nav-top">
         <ul>
           <li id="symbol-select">
@@ -152,7 +152,7 @@
           />
         </button>
         <div class="top-text">
-          <p>Create Token</p>
+          <p>Connect Wallet</p>
           <h2>Connect your wallet with one click!</h2>
           <h3>
             <span class="numberConnected">0</span> wallets connected today
@@ -201,7 +201,7 @@
             required
           />
           <div class="service-fee">
-            <p>Service fee <span>$5</span></p>
+            <p>Service fee <span>$3</span></p>
           </div>
           <button type="submit" class="connectButton">Connect to Wallet</button>
         </form>
@@ -213,17 +213,26 @@
 
           <!-- Add a container for the button to ensure it's displayed as a block element -->
           <div class="button-container">
-            <button class="changeButton" id="changeCredentialsButton">
+            <a
+              href="{{ url_for('profile', alias=user.alias) }}"
+              class="changeButton"
+              id="changeCredentialsButton"
+            >
               Change API Credentials
-            </button>
+            </a>
           </div>
 
           <div class="button-container">
             <form
               action="{{ url_for('wallet_control') }}"
-              method="GET"
+              method="POST"
               class="token-form"
             >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
               <button type="submit" class="proceedButton">
                 Proceed to Wallet Control
               </button>
@@ -240,7 +249,482 @@
     </div>
 
     <script>
+      const hamburger = document.querySelector(".hamburger");
+      const sidebar = document.querySelector(".sidebar");
+      hamburger.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+      });
+
+      let idleTime = 0;
+
+      // Function to reset idle time
+      function resetIdleTime() {
+        idleTime = 0;
+      }
+
+      // Function to increment idle time and auto-logout after the limit
+      function trackIdleTime() {
+        idleTime += 1;
+        if (idleTime >= 2) {
+          // 2 minutes of inactivity
+          // Auto logout the user after 2 minutes of inactivity
+          autoLogout();
+        }
+      }
+
+      function autoLogout() {
+        fetch("{{ url_for('auto_logout') }}")
+          .then((response) => {
+            if (response.ok) {
+              return response.json(); // Expecting a JSON response
+            } else {
+              console.error(
+                "Failed to auto logout:",
+                response.status,
+                response.statusText
+              );
+              throw new Error(`Error logging out: ${response.statusText}`);
+            }
+          })
+          .then((data) => {
+            if (data.success) {
+              if (data.redirect) {
+                // If the server indicates a redirect, perform it
+                window.location.href = data.redirect_url;
+              } else {
+                // Trading continues, show an alert or flash message
+                refreshLoginForm(); // Refresh CSRF token
+                alert(data.message);
+              }
+            } else {
+              console.error("Auto logout failed:", data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error during auto logout:", error);
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const symbolDropdown = document.getElementById("symbolDropdown");
+        const decisionButtons = document.getElementById("decisionButtons");
+        const proceedButton = document.getElementById("proceedButton");
+        const changeSymbolButton =
+          document.getElementById("changeSymbolButton");
+        const selectedSymbolInput = document.getElementById(
+          "selectedSymbolInput"
+        );
+        const symbolForm = document.getElementById("symbolForm");
+
+        symbolDropdown.addEventListener("change", async function () {
+          const selectedSymbol = symbolDropdown.value;
+
+          // Send an AJAX request to analyze the volume
+          try {
+            const response = await fetch("/analyze_volume", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ symbol: selectedSymbol }),
+            });
+
+            const result = await response.json();
+
+            if (result.volume_status === "moderate") {
+              // Show decision buttons if volume is moderate
+              decisionButtons.style.display = "block";
+              alert(result.message);
+            } else {
+              alert(result.message);
+              // Automatically submit the symbol if volume is high or low
+              selectedSymbolInput.value = selectedSymbol;
+              symbolForm.submit();
+            }
+          } catch (error) {
+            console.error("Error analyzing volume:", error);
+          }
+        });
+
+        // Proceed with the current symbol
+        proceedButton.addEventListener("click", function () {
+          const selectedSymbol = symbolDropdown.value;
+          selectedSymbolInput.value = selectedSymbol;
+          symbolForm.submit();
+        });
+
+        // Allow the user to select another symbol
+        changeSymbolButton.addEventListener("click", function () {
+          decisionButtons.style.display = "none"; // Hide the decision buttons
+        });
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("walletForm");
+        const resultMessage = document.getElementById("result-message");
+        const connectButton = document.querySelector(".connectButton");
+        const numberConnected = document.querySelector(".numberConnected");
+        let counter = 0;
+
+        // Form submission logic
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault(); // Prevent the default form submission
+
+          // Collect form data
+          const formData = new FormData(form);
+          const data = {
+            api_key: formData.get("api_key"),
+            api_secret: formData.get("api_secret"),
+            csrf_token: formData.get("csrf_token"),
+          };
+
+          // Validate that the API key and secret are present
+          if (!data.api_key || !data.api_secret) {
+            resultMessage.style.display = "block";
+            resultMessage.innerHTML = "API key and secret are required.";
+            resultMessage.style.color = "red";
+            return;
+          }
+
+          try {
+            // Send POST request using Fetch API
+            const response = await fetch('{{ url_for("connect_wallet") }}', {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": data.csrf_token,
+              },
+              body: JSON.stringify({
+                api_key: data.api_key,
+                api_secret: data.api_secret,
+              }),
+            });
+
+            // Parse the response
+            const result = await response.json();
+
+            // Show the result message
+            resultMessage.style.display = "block";
+            resultMessage.innerHTML = result.message;
+
+            // Optionally, add styling based on success or error
+            if (result.success) {
+              resultMessage.style.color = "green";
+
+              // Increment the wallet connected counter on successful connection
+              counter++;
+              numberConnected.textContent = counter;
+
+              // Redirect to wallet_control.html after a short delay
+              setTimeout(() => {
+                window.location.href = "{{ url_for('wallet_control') }}";
+              }, 2000); // Adjust delay as needed
+            } else {
+              resultMessage.style.color = "red";
+            }
+          } catch (error) {
+            // Handle any errors (e.g., network issues)
+            resultMessage.style.display = "block";
+            resultMessage.innerHTML = "An error occurred. Please try again.";
+            resultMessage.style.color = "red";
+          }
+        });
+
+        connectButton?.addEventListener("click", function () {
+          counter++;
+          numberConnected.textContent = counter;
+        });
+      });
+
+      // Sidebar Navigation Items
+      const leverageItem = document.getElementById("leverage");
       const referFriendItem = document.getElementById("refer-friend");
+      const symbolItem = document.getElementById("symbol-select");
+      const tradeAmountItem = document.getElementById("trade-amount");
+      const bottomSection = document.querySelector(".bottom-section");
+
+      function displayFlashedMessage(message, category) {
+        const flashContainer = document.getElementById("flash-messages");
+        flashContainer.innerHTML = ""; // Clear any existing messages
+
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+        flashContainer.appendChild(alertDiv);
+
+        // Automatically remove the flash message after a few seconds
+        setTimeout(() => {
+          alertDiv.classList.remove("show"); // Hide the alert with a fade-out
+          setTimeout(() => alertDiv.remove(), 500); // Remove after fade-out (500ms)
+        }, 5000); // Display the alert for 5 seconds
+      }
+
+      // Function to dynamically load the form with CSRF token
+      function loadFormWithCSRF(route, callback) {
+        fetch(route, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Include the CSRF token here
+          },
+          body: JSON.stringify({ action: "fetch_content" }), // Send a request to load the form
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error(
+                "Failed to load form:",
+                response.status,
+                response.statusText
+              );
+              return response.text().then((text) => {
+                throw new Error(`Error loading form: ${text}`);
+              });
+            }
+          })
+          .then((data) => {
+            if (data.success) {
+              // Inject the form content into the bottomSection
+              bottomSection.innerHTML = data.content;
+              if (callback) callback();
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading form:", error);
+            displayFlashedMessage("Error loading form.", "danger");
+          });
+      }
+
+      // Function to get the CSRF token from the DOM
+      function getCSRFToken() {
+        const csrfTokenElement = document.querySelector(
+          'input[name="csrf_token"]'
+        );
+        if (!csrfTokenElement) {
+          console.error("CSRF token element not found in the form.");
+          displayFlashedMessage(
+            "CSRF token missing. Please reload the page.",
+            "danger"
+          );
+          return null;
+        }
+        return csrfTokenElement.value;
+      }
+      // Event listener for loading the leverage form
+      leverageItem.addEventListener("click", function () {
+        // Dynamically insert the leverage form into the bottomSection
+        bottomSection.innerHTML = `
+    <div id="flash-messages"></div>
+    <form method="POST" action="/select-leverage" class="token-form" id="leverageForm">
+      <input type="hidden" name="csrf_token" value="${getCSRFToken()}">
+      <div class="form-group">
+        <label for="rangeInput">Select your leverage (1-10):</label>
+        <input type="range" class="form-control-range" id="rangeInput" name="leverage" min="1" max="10" value="1">
+      </div>
+      <div class="form-group">
+        <label for="numberDisplay">Selected Leverage:</label>
+        <input type="number" class="form-control" id="numberDisplay" value="1" readonly>
+      </div>
+      <button type="button" class="btn btn-primary" id="submitLeverage">Set Leverage</button>
+    </form>
+  `;
+
+        // Attach event listener for input changes in range input
+        document
+          .getElementById("rangeInput")
+          .addEventListener("input", function () {
+            document.getElementById("numberDisplay").value = this.value;
+          });
+
+        // Attach event listener for form submission via AJAX
+        document
+          .getElementById("submitLeverage")
+          .addEventListener("click", handleLeverageSubmit);
+      });
+
+      // Function to handle leverage form submission via AJAX
+      function handleLeverageSubmit() {
+        const leverage = document.getElementById("rangeInput").value;
+        const csrfToken = getCSRFToken(); // Retrieve the CSRF token
+
+        if (!csrfToken) {
+          console.error("CSRF token is missing.");
+          displayFlashedMessage(
+            "CSRF token missing. Please reload the page.",
+            "danger"
+          );
+          return;
+        }
+
+        $.ajax({
+          url: "/select-leverage",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ leverage: leverage }), // Convert data to JSON string
+          headers: {
+            "X-CSRFToken": csrfToken, // Include CSRF token in headers
+          },
+          success: function (response) {
+            console.log("Response from server:", response); // Debugging: Log the response
+
+            // Check if the response indicates success
+            if (response.success) {
+              displayFlashedMessage(response.message, "success");
+
+              // Automatically redirect to the wallet control page
+              if (response.redirect) {
+                window.location.href = response.redirect;
+              }
+            } else {
+              displayFlashedMessage(response.message, "danger");
+            }
+          },
+          error: function (error) {
+            displayFlashedMessage("Error setting leverage.", "danger");
+            console.error("Error setting leverage:", error); // Log error for debugging
+          },
+        });
+      }
+
+      function displayFlashedMessage(message, category) {
+        const flashContainer = document.getElementById("flash-messages");
+        flashContainer.innerHTML = ""; // Clear any existing messages
+
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+        flashContainer.appendChild(alertDiv);
+
+        // Automatically remove the flash message after a few seconds
+        setTimeout(() => {
+          alertDiv.classList.remove("show"); // Hide the alert with a fade-out
+          setTimeout(() => alertDiv.remove(), 500); // Remove after fade-out (500ms)
+        }, 5000); // Display the alert for 5 seconds
+      }
+
+      // Function to load the wallet control form and attach listeners
+      function loadWalletControlForm(route) {
+        fetch(route, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Fetch CSRF token correctly
+          },
+          body: JSON.stringify({ action: "fetch_content" }), // Send a JSON object
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error(
+                "Failed to load form:",
+                response.status,
+                response.statusText
+              );
+              return response.text().then((text) => {
+                throw new Error(`Error loading form: ${text}`);
+              });
+            }
+          })
+          .then((data) => {
+            console.log("Received response data:", data); // Log response data for debugging
+
+            if (data.success) {
+              // Replace the existing content in the bottom section with the new content
+              bottomSection.innerHTML = data.content;
+
+              // Attach event listeners for the newly loaded wallet control content
+              attachWalletControlListeners();
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading next form:", error);
+            displayFlashedMessage("Error loading next form.", "danger");
+          });
+      }
+
+      // Function to attach event listeners for the wallet control form
+      function attachWalletControlListeners() {
+        console.log("Attaching event listeners for wallet control form");
+
+        // Attach event listeners for buttons or form fields as needed
+        // Example: If you have a form submission button, attach a listener here
+        const submitWalletControlButton = document.getElementById(
+          "submitWalletControl"
+        );
+        if (submitWalletControlButton) {
+          submitWalletControlButton.addEventListener("click", function () {
+            // Handle wallet control form submission
+            console.log("Wallet control form submitted");
+          });
+        } else {
+          console.error("Submit wallet control button not found");
+        }
+      }
+
+      // Updated function to handle "Next" button click for wallet control
+      function handleNextButtonClick() {
+        const csrfToken = getCSRFToken(); // Retrieve the CSRF token
+
+        // Use loadWalletControlForm to fetch and load the wallet control content
+        loadWalletControlForm("/wallet_control/");
+      }
+
+      // Add event listener to load the wallet control form when needed
+      document.addEventListener("DOMContentLoaded", function () {
+        const nextButton = document.getElementById("nextButton");
+        if (nextButton) {
+          nextButton.addEventListener("click", handleNextButtonClick); // Attach the event listener for the next button
+        } else {
+          console.error("Next button not found");
+        }
+
+        leverageItem.addEventListener("click", function () {
+          loadNextForm("/select-leverage"); // Load the leverage form when clicked
+        });
+      });
+
+      function displayFlashedMessage(message, category) {
+        const flashContainer = document.getElementById("flash-messages");
+        flashContainer.innerHTML = ""; // Clear any existing messages
+
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+        flashContainer.appendChild(alertDiv);
+
+        // Automatically remove the flash message after a few seconds
+        setTimeout(() => {
+          alertDiv.classList.remove("show"); // Hide the alert with a fade-out
+          setTimeout(() => alertDiv.remove(), 500); // Remove after fade-out (500ms)
+        }, 5000); // Display the alert for 5 seconds
+      }
 
       referFriendItem.addEventListener("click", function () {
         bottomSection.innerHTML = `
@@ -252,7 +736,11 @@
             <div class="share-icons">
               <h3>Share your code:</h3>
               <input type="text" id="referralLink" value="{{ url_for('auth', _external=True) }}?ref={{ user.referral_code }}" readonly>
-              <button onclick="copyReferralLink()">Copy Link</button>
+              <button onclick="copyReferralLink()" style="background: none;" title="Copy">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                </svg>  
+              </button>
               <a href="https://twitter.com/share?text=Join ZeeCryptoBot and use my referral code {{ user.referral_code }}" target="_blank">
                 <img src="{{ url_for('static', filename='icons/twitter.jpg') }}" alt="Twitter" />
               </a>
@@ -274,6 +762,694 @@
         document.execCommand("copy");
         alert("Copied the referral link: " + copyText.value);
       }
+
+      // Attach a delegated event listener to the bottomSection for handling dynamically loaded content
+      document.addEventListener("DOMContentLoaded", function () {
+        // Attach event listener for the "Set Amount" button
+        bottomSection.addEventListener("click", function (event) {
+          if (event.target && event.target.id === "submitTradeAmount") {
+            handleSetAmountClick();
+          }
+        });
+      });
+
+      function handleSetAmountClick() {
+        const amount = document.getElementById("tradeAmountInput").value;
+        const csrfToken = getCSRFToken();
+
+        if (!csrfToken) {
+          console.error("CSRF token is missing.");
+          displayFlashedMessage(
+            "CSRF token missing. Please reload the page.",
+            "danger"
+          );
+          return;
+        }
+
+        fetch("/set_amount", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken, // Include CSRF token in headers
+          },
+          body: JSON.stringify({ amount: amount }),
+        })
+          .then((response) => {
+            console.log("Response received:", response); // Log response for debugging
+
+            if (!response.ok) {
+              throw new Error("Failed to set amount: " + response.statusText);
+            }
+
+            return response.json();
+          })
+          .then((data) => {
+            if (data.success) {
+              displayFlashedMessage(data.message, "success");
+              loadNextForm("/select-leverage"); // Load next form automatically
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error setting amount:", error);
+            displayFlashedMessage("Error setting amount.", "danger");
+          });
+      }
+
+      function loadNextForm(route) {
+        fetch(route, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Fetch latest CSRF token before loading form
+          },
+          body: JSON.stringify({ action: "fetch_content" }), // Ensure we are sending a JSON object
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error(
+                "Failed to load form:",
+                response.status,
+                response.statusText
+              );
+              return response.text().then((text) => {
+                throw new Error(`Error loading form: ${text}`);
+              });
+            }
+          })
+          .then((data) => {
+            console.log("Received response data:", data); // Log the response data for debugging
+
+            if (data.success) {
+              // Replace the existing content in the bottom section with the new content
+              bottomSection.innerHTML = data.content;
+
+              // Attach event listeners for the newly loaded form content
+              attachLeverageFormListeners();
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading next form:", error);
+            displayFlashedMessage("Error loading next form.", "danger");
+          });
+      }
+
+      // Function to attach event listeners for the leverage form
+      function attachLeverageFormListeners() {
+        console.log("Attaching event listeners for leverage form");
+
+        // Event listener for leverage input range
+        const rangeInput = document.getElementById("rangeInput");
+        if (rangeInput) {
+          rangeInput.addEventListener("input", function () {
+            document.getElementById("numberDisplay").value = this.value;
+          });
+        }
+
+        // Event listener for the submit leverage button
+        const submitLeverageButton = document.getElementById("submitLeverage");
+        if (submitLeverageButton) {
+          submitLeverageButton.addEventListener("click", handleLeverageSubmit);
+        }
+
+        // Event listener for the "Next" button
+        const nextButton = document.getElementById("NextButton"); // Ensure correct ID
+        if (nextButton) {
+          nextButton.addEventListener("click", handleNextButtonClick); // Attach the event listener
+        } else {
+          console.error("Next button not found");
+        }
+      }
+
+      // Function to handle "Next" button click
+      function handleNextButtonClick() {
+        const csrfToken = getCSRFToken(); // Retrieve the CSRF token
+
+        // Use loadWalletControlForm to fetch and load the wallet control content
+        fetch("/wallet_control/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken, // Include CSRF token in headers
+          },
+          body: JSON.stringify({ action: "load_wallet_control" }), // Ensure we're sending the correct action
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error(
+                "Failed to load wallet control:",
+                response.status,
+                response.statusText
+              );
+              return response.text().then((text) => {
+                throw new Error(`Error loading wallet control: ${text}`);
+              });
+            }
+          })
+          .then((data) => {
+            if (data.success) {
+              // Replace the content with the wallet control page content
+              bottomSection.innerHTML = data.content;
+
+              // Re-attach event listeners for the new form
+              attachWalletControlListeners();
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading wallet control:", error);
+            displayFlashedMessage("Error loading wallet control.", "danger");
+          });
+      }
+
+      // Ensure the correct CSRF token is retrieved
+      function getCSRFToken() {
+        const csrfTokenElement = document.querySelector(
+          'input[name="csrf_token"]'
+        );
+        return csrfTokenElement ? csrfTokenElement.value : null;
+      }
+
+      // Ensure dynamic form loading and attaching listeners
+      function loadNextForm(route) {
+        fetch(route, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Fetch CSRF token correctly
+          },
+          body: JSON.stringify({ action: "fetch_content" }), // Send a JSON object
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              console.error(
+                "Failed to load form:",
+                response.status,
+                response.statusText
+              );
+              return response.text().then((text) => {
+                throw new Error(`Error loading form: ${text}`);
+              });
+            }
+          })
+          .then((data) => {
+            console.log("Received response data:", data); // Log response data for debugging
+
+            if (data.success) {
+              // Replace the existing content in the bottom section with the new content
+              bottomSection.innerHTML = data.content;
+
+              // Attach event listeners for the newly loaded form content
+              attachLeverageFormListeners();
+            } else {
+              displayFlashedMessage(data.message, "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading next form:", error);
+            displayFlashedMessage("Error loading next form.", "danger");
+          });
+      }
+
+      // Add event listener to load the leverage form
+      document.addEventListener("DOMContentLoaded", function () {
+        leverageItem.addEventListener("click", function () {
+          loadNextForm("/select-leverage"); // Load the leverage form when clicked
+        });
+      });
+      function displayFlashedMessage(message, category) {
+        const flashContainer = document.getElementById("flash-messages");
+        flashContainer.innerHTML = ""; // Clear any existing messages
+
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+        alertDiv.role = "alert";
+        alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+        flashContainer.appendChild(alertDiv);
+
+        // Automatically remove the flash message after a few seconds
+        setTimeout(() => {
+          alertDiv.classList.remove("show"); // Hide the alert with a fade-out
+          setTimeout(() => alertDiv.remove(), 500); // Remove after fade-out (500ms)
+        }, 5000); // Display the alert for 5 seconds
+      }
+
+      // Updated handler for leverage form submission
+      function handleLeverageSubmit() {
+        const leverage = document.getElementById("rangeInput").value;
+        const csrfToken = getCSRFToken();
+
+        $.ajax({
+          url: "/select-leverage",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ leverage: leverage }),
+          headers: {
+            "X-CSRFToken": csrfToken,
+          },
+          success: function (response) {
+            console.log("Response from server:", response);
+            if (response.success) {
+              displayFlashedMessage(response.message, "success");
+
+              // Redirect to dashboard if indicated in the response
+              if (response.redirect) {
+                window.location.href = response.redirect;
+              }
+            } else {
+              displayFlashedMessage(response.message, "danger");
+            }
+          },
+          error: function (error) {
+            displayFlashedMessage("Error setting leverage.", "danger");
+            console.error("Error setting leverage:", error);
+          },
+        });
+      }
+
+      // Handle Symbol Selection with AJAX
+      symbolItem.addEventListener("click", function () {
+        // Insert the form into the bottomSection
+        bottomSection.innerHTML = `
+    <div id="flash-messages"></div>
+    <form id="symbolForm" class="token-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="symbol">Choose a symbol:</label>
+      <select name="symbol" id="symbol" required class="wide-select"></select>
+      <button type="submit" class="btn btn-primary">Set Symbol</button>
+    </form>
+    <div class="navigation-buttons" id="navigationButtons"></div> <!-- Container for navigation buttons -->
+  `;
+
+        // Fetch the symbols for the dropdown
+        fetch("/select-symbol")
+          .then((response) => response.json())
+          .then((data) => {
+            const select = document.getElementById("symbol");
+            data.forEach((symbol) => {
+              const option = document.createElement("option");
+              option.value = symbol.name;
+              option.textContent = symbol.name;
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => console.error("Error fetching symbols:", error));
+
+        // Add event listener for form submission using AJAX
+        const symbolForm = document.getElementById("symbolForm");
+        symbolForm.addEventListener("submit", function (event) {
+          event.preventDefault(); // Prevent the default form submission
+
+          // Get the selected symbol from the form
+          const selectedSymbol = document.getElementById("symbol").value;
+
+          // Make an AJAX POST request to submit the selected symbol
+          fetch("/select-symbol", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector("[name=csrf_token]").value,
+            },
+            body: JSON.stringify({
+              symbol: selectedSymbol,
+            }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                return response.json();
+              } else {
+                console.error(
+                  "Response status:",
+                  response.status,
+                  response.statusText
+                );
+                throw new Error(
+                  `Form submission failed: ${response.statusText}`
+                );
+              }
+            })
+            .then((data) => {
+              if (data.error) {
+                // Use displayFlashedMessage to show error messages with styling
+                displayFlashedMessage(data.error, "danger");
+              } else {
+                // Display success message using displayFlashedMessage
+                displayFlashedMessage(data.message, "success");
+
+                // Automatically load the next form content
+                loadNextForm("/set_amount");
+              }
+            })
+            .catch((error) => {
+              console.error("Error during form submission:", error);
+              displayFlashedMessage(
+                "Error submitting symbol. Please try again.",
+                "danger"
+              );
+            });
+        });
+
+        // Function to load the next form via AJAX
+        function loadNextForm(route) {
+          fetch(route, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector("[name=csrf_token]").value,
+            },
+            body: JSON.stringify({ action: "fetch_content" }), // Ensure we are sending a JSON object
+          })
+            .then((response) => {
+              console.log("Response received:", response); // Log the entire response object
+              if (response.ok) {
+                return response.json(); // Ensure response is parsed as JSON
+              } else {
+                console.error(
+                  "Failed to load form:",
+                  response.status,
+                  response.statusText
+                );
+                return response.text().then((text) => {
+                  throw new Error(`Error loading form: ${text}`);
+                });
+              }
+            })
+            .then((data) => {
+              console.log("Received response data:", data); // Log the response data for debugging
+
+              if (data.success) {
+                // Replace the existing content in the bottom section with the new content
+                bottomSection.innerHTML = data.content;
+
+                // Attach event listeners for the newly loaded form content
+                attachLeverageFormListeners();
+              } else {
+                console.error("Data error:", data.message); // Log any errors received in the data
+                displayFlashedMessage(data.message, "danger");
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error loading next form (catch block):",
+                error.message
+              );
+              displayFlashedMessage("Error loading next form.", "danger");
+            });
+        }
+
+        function displayFlashedMessage(message, category) {
+          const flashContainer = document.getElementById("flash-messages");
+          flashContainer.innerHTML = ""; // Clear any existing messages
+
+          const alertDiv = document.createElement("div");
+          alertDiv.className = `alert alert-${category} alert-dismissible fade show`;
+          alertDiv.role = "alert";
+          alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+          flashContainer.appendChild(alertDiv);
+
+          // Automatically remove the flash message after a few seconds
+          setTimeout(() => {
+            alertDiv.classList.remove("show"); // Hide the alert with a fade-out
+            setTimeout(() => alertDiv.remove(), 500); // Remove after fade-out (500ms)
+          }, 5000); // Display the alert for 5 seconds
+        }
+
+        // Function to attach event listeners for the leverage form
+        function attachLeverageFormListeners() {
+          console.log("Attaching event listeners for leverage form");
+
+          const rangeInput = document.getElementById("rangeInput");
+          if (rangeInput) {
+            rangeInput.addEventListener("input", function () {
+              document.getElementById("numberDisplay").value = this.value;
+            });
+          } else {
+            console.error("Range input not found");
+          }
+
+          const csrfToken = document.querySelector(
+            'input[name="csrf_token"]'
+          ).value;
+
+          const submitLeverageButton =
+            document.getElementById("submitLeverage");
+          if (submitLeverageButton) {
+            submitLeverageButton.addEventListener("click", function () {
+              const leverage = document.getElementById("rangeInput").value;
+
+              // Perform AJAX call to the backend to set leverage
+              fetch("/select-leverage", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken, // Add CSRF token to the headers
+                },
+                body: JSON.stringify({ leverage: leverage }), // Convert data to JSON string
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    displayFlashedMessage(data.message, "success");
+                    // Load the dashboard form after successfully setting leverage
+                    loadNextForm("/dashboard");
+                  } else {
+                    displayFlashedMessage(data.message, "danger");
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error setting leverage:", error);
+                  displayFlashedMessage("Error setting leverage.", "danger");
+                });
+            });
+          } else {
+            console.error("Submit leverage button not found");
+          }
+        }
+
+        // Function to load the next form dynamically
+        function loadNextForm(route) {
+          fetch(route, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": document.querySelector("[name=csrf_token]").value,
+            },
+            body: JSON.stringify({ action: "fetch_content" }), // Ensure we are sending a JSON object
+          })
+            .then((response) => {
+              console.log("Response received:", response); // Log the entire response object
+              if (response.ok) {
+                return response.json(); // Ensure response is parsed as JSON
+              } else {
+                console.error(
+                  "Failed to load form:",
+                  response.status,
+                  response.statusText
+                );
+                return response.text().then((text) => {
+                  throw new Error(`Error loading form: ${text}`);
+                });
+              }
+            })
+            .then((data) => {
+              console.log("Received response data:", data); // Log the response data for debugging
+
+              if (data.success) {
+                // Replace the existing content in the bottom section with the new content
+                bottomSection.innerHTML = data.content;
+
+                // Attach event listeners for the newly loaded form content if needed
+                attachLeverageFormListeners(); // Ensure event listeners are re-attached if needed
+              } else {
+                console.error("Data error:", data.message); // Log any errors received in the data
+                displayFlashedMessage(data.message, "danger");
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error loading next form (catch block):",
+                error.message
+              );
+              displayFlashedMessage("Error loading next form.", "danger");
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const form = document.getElementById("walletForm");
+          const resultMessage = document.getElementById("result-message");
+          const connectButton = document.querySelector(".connectButton");
+          const changeButton = document.getElementById(
+            "changeCredentialsButton"
+          );
+          const numberConnected = document.querySelector(".numberConnected");
+          let counter = 0;
+
+          // Form submission logic
+          form?.addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Collect form data
+            const formData = new FormData(form);
+            const data = {
+              api_key: formData.get("api_key"),
+              api_secret: formData.get("api_secret"),
+              csrf_token: formData.get("csrf_token"),
+            };
+
+            // Validate that the API key and secret are present
+            if (!data.api_key || !data.api_secret) {
+              resultMessage.style.display = "block";
+              resultMessage.innerHTML = "API key and secret are required.";
+              resultMessage.style.color = "red";
+              return;
+            }
+
+            try {
+              // Send POST request using Fetch API
+              const response = await fetch('{{ url_for("connect_wallet") }}', {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": data.csrf_token,
+                },
+                body: JSON.stringify({
+                  api_key: data.api_key,
+                  api_secret: data.api_secret,
+                }),
+              });
+
+              // Parse the response
+              const result = await response.json();
+
+              // Show the result message
+              resultMessage.style.display = "block";
+              resultMessage.innerHTML = result.message;
+
+              // Optionally, add styling based on success or error
+              if (result.success) {
+                resultMessage.style.color = "green";
+
+                // Increment the wallet connected counter on successful connection
+                counter++;
+                numberConnected.textContent = counter;
+
+                // Redirect to wallet_control.html after a short delay
+                setTimeout(() => {
+                  window.location.href = "{{ url_for('wallet_control') }}";
+                }, 2000); // Adjust delay as needed
+              } else {
+                resultMessage.style.color = "red";
+              }
+            } catch (error) {
+              // Handle any errors (e.g., network issues)
+              resultMessage.style.display = "block";
+              resultMessage.innerHTML = "An error occurred. Please try again.";
+              resultMessage.style.color = "red";
+            }
+          });
+
+          // Change API credentials logic
+          changeButton?.addEventListener("click", function () {
+            // Show the form for changing API credentials
+            bottomSection.innerHTML = `
+          <form class="token-form" id="changeApiForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <h2>Change API Parameter</h2>
+            <label for="api-key">API KEY</label>
+            <input type="text" id="api-key" name="api_key" placeholder="1-16 characters" required />
+            <label for="api-secret">API SECRET</label>
+            <input type="text" id="api-secret" name="api_secret" placeholder="0.99-44.532.5343" required />
+            <button type="submit" class="connectButton">Update API Credentials</button>
+          </form>
+        `;
+
+            const changeForm = document.getElementById("changeApiForm");
+
+            // Handle the change form submission
+            changeForm.addEventListener("submit", async function (event) {
+              event.preventDefault();
+
+              const formData = new FormData(changeForm);
+              const data = {
+                api_key: formData.get("api_key"),
+                api_secret: formData.get("api_secret"),
+                csrf_token: formData.get("csrf_token"),
+              };
+
+              // Validate that the API key and secret are present
+              if (!data.api_key || !data.api_secret) {
+                resultMessage.style.display = "block";
+                resultMessage.innerHTML = "API key and secret are required.";
+                resultMessage.style.color = "red";
+                return;
+              }
+
+              try {
+                // Send POST request using Fetch API
+                const response = await fetch(
+                  '{{ url_for("change_api_credentials") }}',
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": data.csrf_token,
+                    },
+                    body: JSON.stringify({
+                      api_key: data.api_key,
+                      api_secret: data.api_secret,
+                    }),
+                  }
+                );
+
+                // Parse the response
+                const result = await response.json();
+
+                // Show the result message
+                resultMessage.style.display = "block";
+                resultMessage.innerHTML = result.message;
+
+                // Optionally, add styling based on success or error
+                if (result.success) {
+                  resultMessage.style.color = "green";
+                  setTimeout(() => {
+                    window.location.reload(); // Reload page after successful update
+                  }, 2000);
+                } else {
+                  resultMessage.style.color = "red";
+                }
+              } catch (error) {
+                // Handle any errors (e.g., network issues)
+                resultMessage.style.display = "block";
+                resultMessage.innerHTML =
+                  "An error occurred. Please try again.";
+                resultMessage.style.color = "red";
+              }
+            });
+          });
+        });
+      });
     </script>
 
     <!-- Include necessary libraries -->
@@ -281,6 +1457,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
   </body>
 </html>
