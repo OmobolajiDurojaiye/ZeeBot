@@ -74,18 +74,18 @@ def trading_thread_function(app, user_id, selected_symbol, amount, leverage):
 @app.route('/how-to-use/')
 def howToUse():
     descriptions = [
-        "In the navbar at the top, click Let's Trade Now",
-        "Fill in the signup form to create a new account, if a new account has been created",
-        "Click the log in button at the top right and fill in the form",
-        "This is your dashboard",
-        "Enter your API key and API secret, after which you click on the connect wallet button",
-        "Once that is done, you'll see a proceed to wallet control button, click it",
-        "Click on start and trading starts!",
-        "Before that, make sure you have your symbol set",
-        "You can find the set symbol at the sidebar of your dashboard",
-        "Select your leverage by dragging the blue line to set a fixed leverage ranging from 1-10",
-        "You can also find the leverage at the sidebar on your dashboard",
-        "Click on your name in the dashboard to update your API key, API secret, and Email if needed"
+        "In the navbar at the top, click 'Let's Trade Now'",
+        "Fill in the 'Sign Up' form to create a new account, if a new account has been created...",
+        "Click the 'Log In' button at the top right and fill in the form",
+        "This is your Dashboard",
+        "Enter your 'API key' and 'API secret', after which you click on the 'Connect Wallet' button",
+        "Once that is done, you'll see a 'Proceed to Wallet Control' button, click it",
+        "Click on 'Start' and trading starts!",
+        "Before that, make sure you have your 'Symbol' set",
+        "You can find the 'Set Symbol' at the sidebar of your dashboard",
+        "Select your 'Leverage' by dragging the blue line to set a fixed leverage ranging from 1-10",
+        "You can also find the 'Leverage' at the sidebar on your dashboard",
+        "Click on '[your name]' in the dashboard to update your 'API key', 'API secret', and 'Email' if needed"
     ]
     return render_template('users/howtouse.html', descriptions=descriptions)
 

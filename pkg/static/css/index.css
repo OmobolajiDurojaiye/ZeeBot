@@ -180,3 +180,97 @@ footer {
   height: auto;
   border-radius: 20px;
 }
+
+/* Add media query for tablets and mobile screens */
+@media (max-width: 768px) {
+  /* Navbar adjustments */
+  .navbar {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .nav-links ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  .nav-links ul li {
+    display: block;
+    margin: 10px 0;
+  }
+
+  .social-icons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Video container and content adjustments */
+  .content {
+    padding: 10px;
+  }
+
+  .video-container {
+    width: 100%;
+    padding: 10px 0;
+  }
+
+  #regular-video {
+    width: 100%;
+  }
+
+  /* Card container adjustments */
+  .card-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    width: 90%;
+    margin-bottom: 20px;
+  }
+
+  /* Footer adjustments */
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-section {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .footer-logo {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  /* Font sizes */
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-description {
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small screen adjustments */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 5px 10px;
+  }
+
+  .logo img {
+    height: 50px;
+  }
+
+  .card img {
+    width: 60px;
+    height: 60px;
+  }
+}
