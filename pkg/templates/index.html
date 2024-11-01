@@ -7,6 +7,7 @@
       rel="stylesheet"
       href="{{url_for('static', filename='css/index.css')}}"
     />
+    {%block style%} {%endblock style%}
     <link
       rel="stylesheet"
       href="{{url_for('static', filename='vendor/bootstrap/css/bootstrap.css')}}"
@@ -36,6 +37,13 @@
   </head>
   <body>
     <div class="navbar">
+      <!--close-->
+      <div class="close" onclick="toggleNavbar()">
+        <img
+          src="{{ url_for('static', filename='icons/close.png') }}"
+          alt="Close"
+        />
+      </div>
       <div class="logo">
         <img
           src="{{ url_for('static', filename='images/zeecryptobotlogo.jpg') }}"
@@ -44,8 +52,8 @@
       </div>
       <div class="nav-links">
         <ul>
+          <li><a href="/">Home</a></li>
           <li><a href="#">About</a></li>
-          <li><a href="#">Our Team</a></li>
           <li><a href="/how-to-use">How To Use</a></li>
           <li><a href="/auth/">Let's Trade Now</a></li>
         </ul>
@@ -114,6 +122,17 @@
       </div>
     </div>
 
+    <!-- Hamburger Icon -->
+    <div class="hamburger" onclick="toggleNavbar()">
+      <img
+        src="{{ url_for('static', filename='icons/hamburger.png') }}"
+        alt="Menu"
+      />
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" onclick="closeNavbar()" id="overlay"></div>
+
     <div class="content">
       <div class="video-container" id="#tutorialVideo">
         <video controls id="regular-video">
@@ -125,6 +144,7 @@
         </video>
       </div>
 
+      {%block howto%}
       <div class="card-container">
         <div class="card">
           <img
@@ -158,6 +178,7 @@
           </p>
         </div>
       </div>
+      {%endblock howto%}
 
       <footer>
         <div class="footer-content">
@@ -216,5 +237,41 @@
         </div>
       </footer>
     </div>
+
+    <script>
+      function toggleNavbar() {
+        const navLinks = document.querySelector(".nav-links");
+        const overlay = document.getElementById("overlay");
+        const navbar = document.querySelector(".navbar");
+        const close = document.querySelector(".close");
+        const hamburger = document.querySelector(".hamburger");
+
+        // Toggle visibility of navbar, overlay, and close text
+        if (navbar.style.display === "flex") {
+          navbar.style.display = "none";
+          closeText.style.display = "none";
+          hamburger.style.display = "block";
+        } else {
+          navbar.style.display = "flex";
+          closeText.style.display = "block";
+          hamburger.style.display = "none";
+          overlay.classList.add("show");
+        }
+      }
+
+      function closeNavbar() {
+        const navLinks = document.querySelector(".nav-links");
+        const overlay = document.getElementById("overlay");
+        const navbar = document.querySelector(".navbar");
+        const closeText = document.querySelector(".close-text");
+        const hamburger = document.querySelector(".hamburger");
+
+        // Hide navbar, overlay, and close text, and show hamburger
+        navbar.style.display = "none";
+        closeText.style.display = "none";
+        hamburger.style.display = "block";
+        overlay.classList.remove("show");
+      }
+    </script>
   </body>
 </html>
